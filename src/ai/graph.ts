@@ -10,22 +10,27 @@ import { clarifyQuestion } from './nodes/clarifyQuestion';
 import { SupportState } from './state';
 import { ReadCustomerQuestionNode } from './nodes/ReadMail';
 
-const emitResult = async () => ({});
+const handleRouting = async () => ({
+  route: 'Routing handled',
+});
 const checkpointer = new MemorySaver();
 const store = new InMemoryStore();
 
 export const supportGraph = new StateGraph(SupportState)
   .addNode('readCustomerQuestion', ReadCustomerQuestionNode)
   .addNode('classify-intent', classifyIntent, {
-    ends: ['clarify-question', 'emit-result'],
+    ends: ['clarify-question', 'handle-routing'],
   })
   .addNode('clarify-question', clarifyQuestion, {
-    ends: ['emit-result'],
+    // ends: ['handle-routing'],
   })
-  .addNode('emit-result', emitResult)
+  .addNode('handle-routing', handleRouting)
+
   .addEdge(START, 'readCustomerQuestion')
   .addEdge('readCustomerQuestion', 'classify-intent')
-  .addEdge('emit-result', END)
+
+  .addEdge('clarify-question', END)
+  .addEdge('handle-routing', END)
   .compile({
     checkpointer,
     store,

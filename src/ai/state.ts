@@ -30,8 +30,9 @@ export const SupportState = new StateSchema({
   intent: SupportIntentSchema.default('unknown'),
   confidence: z.number().min(0).max(1).default(0),
   needsClarification: z.boolean().default(false),
+  missingInformation: z.array(z.string()),
   clarificationPrompt: z.string().default(''),
-  nextStep: SupportNextStepSchema.default('emit-result'),
+  finalResult: SupportNextStepSchema.default('emit-result'),
 });
 
 export type SupportStateType = typeof SupportState.State;

@@ -11,7 +11,8 @@ const CLARIFICATION_PROMPTS: Record<string, string> = {
   bug_report: 'Could you share the steps to reproduce the bug?',
   feature_request: 'Could you share the feature you want and why it matters?',
   faq: 'Could you share a few more details so I can find the right answer?',
-  human_agent: 'Could you share the main issue you want me to pass to a human agent?',
+  human_agent:
+    'Could you share the main issue you want me to pass to a human agent?',
   unknown: 'Could you share a few more details so I can help?',
 };
 
@@ -27,8 +28,6 @@ export const clarifyQuestion: GraphNode<
     update: {
       needsClarification: true,
       clarificationPrompt,
-      nextStep: 'emit-result',
-      messages: [new AIMessage(clarificationPrompt)],
     } satisfies Partial<SupportStateType>,
     goto: 'emit-result',
   });
