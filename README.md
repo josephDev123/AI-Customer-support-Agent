@@ -1,98 +1,155 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Customer Support Agent
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS customer-support API powered by LangGraph and a structured-output chat model. The agent extracts customer information, classifies support intent, and determines whether more information is needed.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Current status
 
-## Description
+This project is under active development. The README documents the current implementation and will evolve as the agent gains more capabilities.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Current limitations:
 
-## Project setup
+- Run records are stored in memory and are lost when the application restarts.
+- The HTTP service currently sends placeholder customer content and email data into the graph instead of the submitted question.
+- The graph can pause with an interrupt when an email address is missing or clarification is required. Resume handling is not yet exposed through the HTTP API.
 
-```bash
-$ npm install
-```
+## Technology
 
-## Compile and run the project
+- [NestJS](https://nestjs.com/) for the HTTP application
+- [LangGraph](https://langchain-ai.github.io/langgraphjs/) for agent orchestration
+- [LangChain](https://js.langchain.com/) for model integration
+- Zod for request, state, and model-output validation
+- Hugging Face's OpenAI-compatible router as the current model provider
+
+## Prerequisites
+
+- Node.js 24 or a compatible Node.js version
+- npm
+- A Hugging Face API key
+
+## Setup
+
+Install dependencies:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
+Create a `.env` file in the project root:
+
+```env
+PORT=6000
+HF_API_KEY=your_huggingface_api_key
+LANGSMITH_API_KEY=your_langsmith_api_key
+```
+
+All three variables are currently required during application configuration validation. `PORT` defaults to `6000` in the server bootstrap when no port is provided at runtime.
+
+## Running the application
 
 ```bash
-# unit tests
-$ npm run test
+# Start once
+npm run start
 
-# e2e tests
-$ npm run test:e2e
+# Start in watch mode
+npm run start:dev
 
-# test coverage
-$ npm run test:cov
+# Build the application
+npm run build
+
+# Run the compiled application
+npm run start:prod
 ```
 
-## Deployment
+The HTTP server listens on `http://localhost:6000` by default, or on the port configured through `PORT`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## API
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### `POST /agent/question`
+
+Submit a customer-support question:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+curl -X POST http://localhost:6000/agent/question \
+  -H "Content-Type: application/json" \
+  -d '{"question":"Where is my order?"}'
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The request body accepts:
 
-## Resources
+```json
+{
+  "question": "Where is my order?",
+  "threadId": "optional-existing-thread-id"
+}
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+`question` is required and must contain non-whitespace text. `threadId` is optional; when omitted, the service generates a UUID.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+A successful response includes the stored run's `runId` and the graph result, which may contain fields such as:
 
-## Support
+- `intent`: `faq`, `order_status`, `refund`, `payment`, `account`, `complaint`, `bug_report`, `feature_request`, `human_agent`, or `unknown`
+- `confidence`: a value between `0` and `1`
+- `needsClarification`
+- `missingInformation`
+- `clarificationPrompt`
+- `finalResult`
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Invalid or missing questions return a `400 Bad Request` response.
 
-## Stay in touch
+## Agent workflow
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+The active support graph in `src/ai/graph.ts` follows this flow:
 
-## License
+1. Extract the customer question and email from the input.
+2. Interrupt if an email address is unavailable.
+3. Classify the support intent and confidence.
+4. Interrupt when clarification is required.
+5. Produce a clarification prompt or complete the current routing step.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+The current model is `Qwen/Qwen3-4B-Instruct-2507:nscale`, accessed through `https://router.huggingface.co/v1` with `HF_API_KEY`.
+
+## Project structure
+
+```text
+src/
+├── ai/                  LangGraph state, model, graph, and nodes
+├── customer-support/   HTTP controller, service, DTO, and in-memory repository
+├── config/              Application configuration
+├── shared/              Shared environment validation
+└── main.ts              Application bootstrap
+test/                    End-to-end tests
+langgraph.json           LangGraph CLI graph configuration
+```
+
+## Tests and quality checks
+
+```bash
+# Unit tests
+npm run test
+
+# Watch tests
+npm run test:watch
+
+# End-to-end tests
+npm run test:e2e
+
+# Coverage
+npm run test:cov
+
+# Lint
+npm run lint
+
+# Format source files
+npm run format
+```
+
+## LangGraph development
+
+The graph configured for LangGraph tooling is named `agent` and points to `src/ai/graph.ts:supportGraph`:
+
+```bash
+npx @langchain/langgraph-cli dev
+```
+
+Refer to `langgraph.json` and the [LangGraph JavaScript documentation](https://langchain-ai.github.io/langgraphjs/) for development and deployment configuration.
+
