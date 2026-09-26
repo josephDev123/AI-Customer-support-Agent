@@ -5,32 +5,77 @@ import {
   MemorySaver,
   StateGraph,
 } from '@langchain/langgraph';
-import { classifyIntent } from './nodes/classifyIntent';
-import { clarifyQuestion } from './nodes/clarifyQuestion';
+import { analyzeSupportRequest } from './nodes/classifyIntent';
 import { SupportState } from './state';
 import { ReadCustomerQuestionNode } from './nodes/ReadMail';
+import { requestClarification } from './nodes/requestClarification';
+import { routeSupportRequest } from './nodes/routeSupportRequest';
+import { generateSupportResponse } from './nodes/generateSupportResponse';
+import { handleFaq } from './nodes/handleFaq';
+import { handleOrderStatus } from './nodes/handleOrderStatus';
+import { handleRefund } from './nodes/handleRefund';
+import { handlePayment } from './nodes/handlePayment';
+import { handleAccount } from './nodes/handleAccount';
+import { handleComplaint } from './nodes/handleComplaint';
+import { handleBugReport } from './nodes/handleBugReport';
+import { handleFeatureRequest } from './nodes/handleFeatureRequest';
+import { handleUnknown } from './nodes/handleUnknown';
+import { escalateToHuman } from './nodes/escalateToHuman';
 
-const handleRouting = async () => ({
-  route: 'Routing handled',
-});
 const checkpointer = new MemorySaver();
 const store = new InMemoryStore();
 
 export const supportGraph = new StateGraph(SupportState)
   .addNode('readCustomerQuestion', ReadCustomerQuestionNode)
-  .addNode('classify-intent', classifyIntent, {
-    ends: ['clarify-question', 'handle-routing'],
+  .addNode('analyzeSupportRequest', analyzeSupportRequest, {
+    ends: ['routeSupportRequest', 'requestClarification'],
   })
-  .addNode('clarify-question', clarifyQuestion, {
-    // ends: ['handle-routing'],
+  .addNode('routeSupportRequest', routeSupportRequest, {
+    ends: [
+      'handleFaq',
+      'handleOrderStatus',
+      'handleRefund',
+      'handlePayment',
+      'handleAccount',
+      'handleComplaint',
+      'handleBugReport',
+      'handleFeatureRequest',
+      'escalateToHuman',
+      'handleUnknown',
+    ],
   })
-  .addNode('handle-routing', handleRouting)
+  .addNode('requestClarification', requestClarification)
+  .addNode('generateSupportResponse', generateSupportResponse)
+
+  // Handlers
+  .addNode('handleFaq', handleFaq)
+  .addNode('handleOrderStatus', handleOrderStatus)
+  .addNode('handleRefund', handleRefund)
+  .addNode('handlePayment', handlePayment)
+  .addNode('handleAccount', handleAccount)
+  .addNode('handleComplaint', handleComplaint)
+  .addNode('handleBugReport', handleBugReport)
+  .addNode('handleFeatureRequest', handleFeatureRequest)
+  .addNode('escalateToHuman', escalateToHuman)
+  .addNode('handleUnknown', handleUnknown)
 
   .addEdge(START, 'readCustomerQuestion')
-  .addEdge('readCustomerQuestion', 'classify-intent')
+  .addEdge('readCustomerQuestion', 'analyzeSupportRequest')
+  .addEdge('requestClarification', 'analyzeSupportRequest')
 
-  .addEdge('clarify-question', END)
-  .addEdge('handle-routing', END)
+  // Each handler eventually goes to response generation
+  .addEdge('handleFaq', 'generateSupportResponse')
+  .addEdge('handleOrderStatus', 'generateSupportResponse')
+  .addEdge('handleRefund', 'generateSupportResponse')
+  .addEdge('handlePayment', 'generateSupportResponse')
+  .addEdge('handleAccount', 'generateSupportResponse')
+  .addEdge('handleComplaint', 'generateSupportResponse')
+  .addEdge('handleBugReport', 'generateSupportResponse')
+  .addEdge('handleFeatureRequest', 'generateSupportResponse')
+  .addEdge('escalateToHuman', 'generateSupportResponse')
+  .addEdge('handleUnknown', 'generateSupportResponse')
+  .addEdge('generateSupportResponse', END)
+
   .compile({
     checkpointer,
     store,

@@ -1,5 +1,5 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { Command, interrupt, type GraphNode } from '@langchain/langgraph';
+import { Command, type GraphNode } from '@langchain/langgraph';
 import { z } from 'zod';
 import { getSupportModel } from '../model';
 import {
@@ -15,7 +15,9 @@ const IntentDecisionSchema = z.object({
   missingInformation: z.array(z.string()),
 });
 
-export const classifyIntent: GraphNode<typeof SupportState> = async (state) => {
+export const analyzeSupportRequest: GraphNode<typeof SupportState> = async (
+  state,
+) => {
   const model = getSupportModel();
   const classifier = model.withStructuredOutput(IntentDecisionSchema);
 
@@ -38,17 +40,11 @@ export const classifyIntent: GraphNode<typeof SupportState> = async (state) => {
   ]);
 
   console.log('RAW MODEL OUTPUT:', decision);
-  const routerDecision =
-    decision.missingInformation.length < 0 || !decision.needsClarification
-      ? 'clarify-question'
-      : 'handle-routing';
 
-  if (routerDecision === 'clarify-question') {
-    interrupt({
-      reason: `the information required to proceed with query is not fully provided.
-          hint: the following info is missing : ${JSON.stringify(decision.missingInformation)}`,
-    });
-  }
+  const needsClarification =
+    decision.confidence < 0.7 ||
+    decision.missingInformation.length > 0 ||
+    decision.needsClarification;
 
   return new Command({
     update: {
@@ -57,6 +53,6 @@ export const classifyIntent: GraphNode<typeof SupportState> = async (state) => {
       needsClarification: decision.needsClarification,
       missingInformation: decision.missingInformation,
     } satisfies Partial<SupportStateType>,
-    goto: routerDecision,
+    goto: needsClarification ? 'requestClarification' : 'routeSupportRequest',
   });
 };

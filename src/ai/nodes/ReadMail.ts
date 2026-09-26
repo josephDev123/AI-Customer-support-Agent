@@ -2,12 +2,12 @@ import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { Command, interrupt, type GraphNode } from '@langchain/langgraph';
 import { z } from 'zod';
 
-import { SupportState, type SupportStateType } from '../state';
+import { type SupportStateType } from '../state';
 import { getSupportModel } from '../model';
 
 const LlmQuestionSchema = z.object({
   customerQuestion: z.string(),
-  email: z.string().nullable(),
+  email: z.string(),
 });
 
 export const ReadCustomerQuestionNode: GraphNode<SupportStateType> = async (
@@ -30,30 +30,33 @@ Rules:
 
 1. customerQuestion must contain the customer's actual support question.
 2. If the customer provides an email address, extract it exactly.
-3. If the customer does NOT provide an email address, email MUST be null.
-4. Do not invent an email address.
-5. Return only the structured output.
+3. Do not invent an email address.
+4. Return only the structured output.
   `),
 
-    new HumanMessage(state.customerQuestion.content),
+    new HumanMessage(state.customerQuestion),
   ]);
 
   console.log('what was return form reading customer question', result);
 
-  if (!result.email) {
-    interrupt({
+  const emailSchema = z.email();
+
+  let customerMail = result.email;
+
+  if (!customerMail) {
+    const providedEmail = interrupt({
       reason: 'Customer email is required',
     });
+
+    customerMail = emailSchema.parse(providedEmail);
   }
 
   return new Command({
     update: {
-      customerQuestion: {
-        content: result.customerQuestion,
-        email: result.email,
-      },
+      customerQuestion: result.customerQuestion,
+      customerMail,
     },
 
-    goto: 'classify-intent',
+    goto: 'analyzeSupportRequest',
   });
 };
