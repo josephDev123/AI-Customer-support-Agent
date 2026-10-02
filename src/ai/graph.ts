@@ -5,7 +5,7 @@ import {
   MemorySaver,
   StateGraph,
 } from '@langchain/langgraph';
-import { analyzeSupportRequest } from './nodes/classifyIntent';
+import { analyzeSupportRequest } from './nodes/analyzeSupportRequest';
 import { SupportState } from './state';
 import { ReadCustomerQuestionNode } from './nodes/ReadMail';
 import { requestClarification } from './nodes/requestClarification';

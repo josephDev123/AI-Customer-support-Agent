@@ -1,11 +1,6 @@
 import { MessagesValue, StateSchema } from '@langchain/langgraph';
 import { z } from 'zod';
 
-// export const CustomerInfo = z.object({
-//   content: z.string().min(1),
-//   email: z.email().nullable(),
-// });
-
 export const SupportIntents = [
   'faq',
   'order_status',
@@ -45,8 +40,6 @@ export const SupportState = new StateSchema({
   }),
 
   response: z.string().default(''),
-  // clarificationPrompt: z.string().default(''),
-  // finalResult: SupportNextStepSchema.default('emit-result'),
 });
 
 export type SupportStateType = typeof SupportState.State;

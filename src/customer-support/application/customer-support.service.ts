@@ -7,7 +7,7 @@ import {
   type CustomerSupportRepository,
 } from '../infrastructure/customer-support.repository';
 import { supportGraph } from '../../ai/graph';
-import { SupportCustomerInfo, type SupportStateType } from '../../ai/state';
+// import { SupportCustomerInfo, type SupportStateType } from '../../ai/state';
 
 @Injectable()
 export class CustomerSupportService {
@@ -29,10 +29,8 @@ export class CustomerSupportService {
       threadId ?? randomUUID(),
     );
 
-    const initialState: SupportCustomerInfo = {
-      content: 'I was charged twice for my subscription! This is urgent!',
-      email: 'customer@example.com',
-    };
+    const initialState =
+      'I was charged twice for my subscription! This is urgent!';
 
     const result = await supportGraph.invoke({
       customerQuestion: initialState,
