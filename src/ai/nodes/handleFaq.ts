@@ -14,23 +14,9 @@ export const handleFaq: GraphNode<SupportStateType> = async (
   //INITIATE PINECONE
   const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY ?? '' });
 
-  // 2. Create an index configured for use with a particular embedding model
-  // const indexModel = await pc.indexes.createForModel({
-  //   name: 'customer-support',
-  //   cloud: 'aws',
-  //   region: 'us-east-1',
-  //   embed: {
-  //     model: 'multilingual-e5-large',
-  //     fieldMap: { text: 'chunk_text' },
-  //   },
-  //   waitUntilReady: true,
-  // });
-
-  // console.log('index model and host:', indexModel);
-
   // 3. Target the index
   const index = pc.index({
-    host: 'https://soaring-alder-i72f43o.svc.aped-4627-b74a.pinecone.io',
+    host: process.env.PINECONE_HOST ?? '',
   });
 
   // 5. Search for similar records using text queries
@@ -47,11 +33,31 @@ export const handleFaq: GraphNode<SupportStateType> = async (
     },
   });
 
-  console.log('PINECONE SEARCH RESPONSE:', searchResponse);
+  // console.log(
+  //   'PINECONE SEARCH RESPONSE:',
+  //   JSON.stringify(searchResponse.result.hits),
+  // );
+
+  const results = searchResponse.result.hits
+    ? searchResponse.result.hits.map((hit) => {
+        console.log('UTUTUTUTUTUUTUTUT', JSON.stringify(hit.fields));
+        const answer = hit.fields as { source: string; text: string };
+        return {
+          source: answer.source,
+          text: answer.text,
+        };
+      })
+    : [];
+
+  console.log('ANSWER RESULTS:', JSON.stringify(results));
 
   return new Command({
     update: {
-      response: '',
+      toolResult: {
+        success: results.length > 0,
+        data: results,
+        error: results.length === 0 ? 'No relevant FAQs found.' : null,
+      },
     },
   });
 };
