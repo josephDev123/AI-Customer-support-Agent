@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@langchain/core": "^1.2.5",
+    "@langchain/google": "^0.2.10",
     "@langchain/langgraph": "^1.4.9",
     "@langchain/openai": "^1.5.11",
     "@nestjs/common": "^11.0.1",

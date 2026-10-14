@@ -13,7 +13,7 @@ const LlmQuestionSchema = z.object({
 export const ReadCustomerQuestionNode: GraphNode<SupportStateType> = async (
   state,
 ) => {
-  const model = getSupportModel();
+  const model = await getSupportModel();
 
   const llmWithStructuredOutput = model.withStructuredOutput(LlmQuestionSchema);
 

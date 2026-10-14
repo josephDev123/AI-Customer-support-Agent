@@ -7,7 +7,7 @@ export const handleBugReport: GraphNode<SupportStateType> = async (
   state,
   _config,
 ) => {
-  const llm = getSupportModel();
+  const llm = await getSupportModel();
 
   const response = await llm.invoke([
     new SystemMessage(`

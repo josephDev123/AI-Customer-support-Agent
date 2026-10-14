@@ -35,15 +35,16 @@ export class CustomerSupportService {
     const result = await supportGraph.invoke({
       customerQuestion: initialState,
     });
+    return result;
 
-    await this.customerSupportRepository.saveRun({
-      ...run,
-      result,
-    });
+    // await this.customerSupportRepository.saveRun({
+    //   ...run,
+    //   result,
+    // });
 
-    return {
-      runId: run.id,
-      ...result,
-    };
+    // return {
+    //   runId: run.id,
+    //   ...result,
+    // };
   }
 }

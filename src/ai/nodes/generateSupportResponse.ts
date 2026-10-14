@@ -44,7 +44,7 @@ export const generateSupportResponse: GraphNode<SupportStateType> = async (
   state,
 ) => {
   try {
-    const llm = getSupportModel();
+    const llm = await getSupportModel();
     const toolResult = serializeToolResult(state.toolResult);
 
     const response = await llm.invoke([

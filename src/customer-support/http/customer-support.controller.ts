@@ -3,10 +3,14 @@ import { CustomerSupportService } from '../application/customer-support.service'
 
 @Controller('agent')
 export class CustomerSupportController {
-  constructor(private readonly customerSupportService: CustomerSupportService) {}
+  constructor(
+    private readonly customerSupportService: CustomerSupportService,
+  ) {}
 
   @Post('question')
-  askQuestion(@Body() body: unknown) {
-    return this.customerSupportService.handleCustomerQuestion(body);
+  async askQuestion(@Body() body: unknown) {
+    const result =
+      await this.customerSupportService.handleCustomerQuestion(body);
+    return result;
   }
 }

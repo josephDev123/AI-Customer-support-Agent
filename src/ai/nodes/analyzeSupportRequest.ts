@@ -18,7 +18,7 @@ const IntentDecisionSchema = z.object({
 export const analyzeSupportRequest: GraphNode<typeof SupportState> = async (
   state,
 ) => {
-  const model = getSupportModel();
+  const model = await getSupportModel();
   // const classifier = model.withStructuredOutput(IntentDecisionSchema);
 
   // const decision = await classifier.invoke([

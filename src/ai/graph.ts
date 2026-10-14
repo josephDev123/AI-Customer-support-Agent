@@ -4,6 +4,8 @@ import {
   InMemoryStore,
   MemorySaver,
   StateGraph,
+  NodeError,
+  Command,
 } from '@langchain/langgraph';
 import { analyzeSupportRequest } from './nodes/analyzeSupportRequest';
 import { SupportState } from './state';
@@ -25,7 +27,18 @@ import { escalateToHuman } from './nodes/escalateToHuman';
 const checkpointer = new MemorySaver();
 const store = new InMemoryStore();
 
+const defaultErrorHandler = (_state: unknown, error: NodeError) => {
+  console.log(`handled: ${error.error.message}`);
+  return {
+    response: '',
+  };
+};
+
 export const supportGraph = new StateGraph(SupportState)
+  .setNodeDefaults({
+    retryPolicy: { maxAttempts: 3 },
+    errorHandler: defaultErrorHandler,
+  })
   .addNode('readCustomerQuestion', ReadCustomerQuestionNode)
   .addNode('analyzeSupportRequest', analyzeSupportRequest, {
     ends: ['routeSupportRequest', 'requestClarification'],
