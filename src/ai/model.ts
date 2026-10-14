@@ -20,8 +20,6 @@ import { initChatModel } from 'langchain';
 // };
 
 export async function getSupportModel() {
-  // process.env.GOOGLE_API_KEY = 'your-api-key';
-
   const model = await initChatModel('google:gemini-3.5-flash-lite');
   return model;
 }
