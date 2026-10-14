@@ -1,4 +1,3 @@
-import { ChatOpenAI } from '@langchain/openai';
 import { initChatModel } from 'langchain';
 
 // let modelPromise: ChatOpenAI | null = null;
