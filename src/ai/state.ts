@@ -28,7 +28,7 @@ const ToolResultSchema = z.object({
 export const SupportState = new StateSchema({
   // messages: MessagesValue,
   customerQuestion: z.string().min(1),
-  customerMail: z.email(),
+  customerMail: z.email().optional(),
   intent: SupportIntentSchema.default('unknown'),
   confidence: z.number().min(0).max(1).default(0),
   needsClarification: z.boolean().default(false),

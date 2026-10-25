@@ -73,7 +73,7 @@ export const supportGraph = new StateGraph(SupportState)
   .addNode('handleUnknown', handleUnknown)
 
   .addEdge(START, 'readCustomerQuestion')
-  .addEdge('readCustomerQuestion', 'analyzeSupportRequest')
+  // .addEdge('readCustomerQuestion', 'analyzeSupportRequest')
   .addEdge('requestClarification', 'analyzeSupportRequest')
 
   // Each handler eventually goes to response generation

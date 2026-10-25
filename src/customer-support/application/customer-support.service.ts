@@ -7,7 +7,18 @@ import {
   type CustomerSupportRepository,
 } from '../infrastructure/customer-support.repository';
 import { supportGraph } from '../../ai/graph';
-// import { SupportCustomerInfo, type SupportStateType } from '../../ai/state';
+
+export type SupportStreamInput = {
+  customerQuestion: string;
+};
+
+export type SupportStreamOptions = {
+  threadId: string;
+  streamMode?: Array<
+    'values' | 'updates' | 'messages' | 'tasks' | 'checkpoints'
+  >;
+  signal?: AbortSignal;
+};
 
 @Injectable()
 export class CustomerSupportService {
@@ -23,28 +34,25 @@ export class CustomerSupportService {
       throw new BadRequestException('question is required');
     }
 
-    const { question, threadId } = parsed.data;
-    const run = await this.customerSupportRepository.createRun(
-      question,
-      threadId ?? randomUUID(),
+    const { customerQuestion, threadId } = parsed.data;
+
+    const result = await supportGraph.invoke(
+      {
+        customerQuestion: customerQuestion,
+      },
+      { configurable: { thread_id: threadId } },
     );
-
-    const initialState =
-      'I was charged twice for my subscription! This is urgent!';
-
-    const result = await supportGraph.invoke({
-      customerQuestion: initialState,
-    });
     return result;
+  }
 
-    // await this.customerSupportRepository.saveRun({
-    //   ...run,
-    //   result,
-    // });
-
-    // return {
-    //   runId: run.id,
-    //   ...result,
-    // };
+  async streamCustomerQuestion(
+    input: SupportStreamInput,
+    options: SupportStreamOptions,
+  ): Promise<AsyncIterable<unknown>> {
+    return supportGraph.stream(input, {
+      configurable: { thread_id: options.threadId },
+      streamMode: options.streamMode ?? ['values', 'updates', 'messages'],
+      signal: options.signal,
+    });
   }
 }

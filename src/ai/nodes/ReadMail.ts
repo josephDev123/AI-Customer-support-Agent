@@ -1,9 +1,10 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { Command, interrupt, type GraphNode } from '@langchain/langgraph';
 import { z } from 'zod';
-
+import { randomUUID } from 'node:crypto';
 import { type SupportStateType } from '../state';
 import { getSupportModel } from '../model';
+import { Runtime } from 'langchain';
 
 const LlmQuestionSchema = z.object({
   customerQuestion: z.string(),
@@ -12,7 +13,32 @@ const LlmQuestionSchema = z.object({
 
 export const ReadCustomerQuestionNode: GraphNode<SupportStateType> = async (
   state,
+  runtime: Runtime,
 ) => {
+  console.log('Current state:', {
+    question: state.customerQuestion,
+    customerMail: state.customerMail,
+  });
+  const namespace = ['mail'];
+
+  // const store = runtime.store;
+  // const storeMail = await store?.search(namespace);
+  // const storeExtractedMail = storeMail
+  //   ? storeMail[storeMail.length - 1].value?.mail
+  //   : null;
+  // console.log('store', storeExtractedMail);
+
+  // if (storeExtractedMail && state.customerQuestion) {
+  //   return new Command({
+  //     update: {
+  //       customerQuestion: state.customerQuestion,
+  //       customerMail: storeExtractedMail,
+  //     },
+
+  //     goto: 'analyzeSupportRequest',
+  //   });
+  // }
+
   const model = await getSupportModel();
 
   const llmWithStructuredOutput = model.withStructuredOutput(LlmQuestionSchema);
@@ -41,15 +67,26 @@ Rules:
 
   const emailSchema = z.email();
 
-  let customerMail = result.email;
+  // let customerMail = result.email;
+  let customerMail = state.customerMail || result.email;
+
+  console.log('mail:', customerMail);
 
   if (!customerMail) {
     const providedEmail = interrupt({
       reason: 'Customer email is required',
     });
+    console.log('interupt :', providedEmail);
 
     customerMail = emailSchema.parse(providedEmail);
+    // const id = randomUUID();
+    // await store?.put(namespace, id, { mail: providedEmail });
   }
+
+  console.log('NODE RETURN:', {
+    customerQuestion: result.customerQuestion,
+    customerMail,
+  });
 
   return new Command({
     update: {
