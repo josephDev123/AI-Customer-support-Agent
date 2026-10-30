@@ -1,7 +1,5 @@
 import { Command, GraphNode } from '@langchain/langgraph';
 import { SupportStateType } from '../state';
-import { getSupportModel } from '../model';
-import { HumanMessage, SystemMessage } from 'langchain';
 import { Pinecone } from '@pinecone-database/pinecone';
 
 export const handleFaq: GraphNode<SupportStateType> = async (
@@ -32,11 +30,6 @@ export const handleFaq: GraphNode<SupportStateType> = async (
       rankFields: ['text'],
     },
   });
-
-  // console.log(
-  //   'PINECONE SEARCH RESPONSE:',
-  //   JSON.stringify(searchResponse.result.hits),
-  // );
 
   const results = searchResponse.result.hits
     ? searchResponse.result.hits.map((hit) => {

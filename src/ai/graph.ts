@@ -69,7 +69,7 @@ export const supportGraph = new StateGraph(SupportState)
   .addNode('handleComplaint', handleComplaint)
   .addNode('handleBugReport', handleBugReport)
   .addNode('handleFeatureRequest', handleFeatureRequest)
-  .addNode('escalateToHuman', escalateToHuman)
+  .addNode('escalateToHuman', escalateToHuman())
   .addNode('handleUnknown', handleUnknown)
 
   .addEdge(START, 'readCustomerQuestion')

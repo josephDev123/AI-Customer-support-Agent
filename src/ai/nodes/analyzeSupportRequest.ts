@@ -153,7 +153,10 @@ Examples:
 ### 9. human_agent
 Use "human_agent" when the customer explicitly requests
 a human representative or when the message clearly asks
-to speak with a human support agent.
+to speak with a human support agent. 
+also when Customer has a complex unresolved issue.
+AI cannot confidently resolve the issue.
+Customer has a serious complaint.
 
 Examples:
 - "I want to speak to a human."

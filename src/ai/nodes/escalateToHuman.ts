@@ -1,51 +1,77 @@
 import { Command, type GraphNode } from '@langchain/langgraph';
 import { SupportState } from '../state';
 
-export const escalateToHuman: GraphNode<typeof SupportState> = async (
-  state,
-) => {
-  switch (state.intent) {
-    case 'faq':
-      return new Command({ goto: 'handleFaq' });
+interface CreateEscalationInput {
+  customerEmail: string;
+  intent: string;
+  reason: EscalationReason;
+}
 
-    case 'order_status':
-      return new Command({ goto: 'handleOrderStatus' });
+export enum EscalationReason {
+  CUSTOMER_REQUESTED_HUMAN = 'CUSTOMER_REQUESTED_HUMAN',
+  COMPLEX_ISSUE = 'COMPLEX_ISSUE',
+  LOW_CONFIDENCE = 'LOW_CONFIDENCE',
+  UNRESOLVED_ISSUE = 'UNRESOLVED_ISSUE',
+  CUSTOMER_COMPLAINT = 'CUSTOMER_COMPLAINT',
+}
+interface CreateEscalationResult {
+  ticketId: string;
+  assignedAgentName: string;
+}
 
-    case 'refund':
-      return new Command({ goto: 'handleRefund' });
+export const escalateToHuman = (
+  // supportService: SupportService,
+): GraphNode<typeof SupportState, any> => {
+  return async (state, runtime) => {
+    try {
+      // 1. Create the escalation ticket
+      // const escalation = await supportService.createEscalation({
+      //   customerEmail: runtime.configurable?.email,
+      //   customerQuestion: state.customerQuestion,
+      //   intent: state.intent,
+      //   reason: EscalationReason.CUSTOMER_REQUESTED_HUMAN,
+      // });
 
-    case 'payment':
-      return new Command({ goto: 'handlePayment' });
+      // 1. Create the escalation ticket mock result
 
-    case 'account':
-      return new Command({ goto: 'handleAccount' });
+      const escalation = {
+        customerEmail: runtime.configurable?.email,
+        customerQuestion: state.customerQuestion,
+        intent: state.intent,
+        reason: EscalationReason.CUSTOMER_REQUESTED_HUMAN,
+      };
 
-    case 'complaint':
-      return new Command({ goto: 'handleComplaint' });
-
-    case 'bug_report':
-      return new Command({ goto: 'handleBugReport' });
-
-    case 'feature_request':
-      return new Command({ goto: 'handleFeatureRequest' });
-
-    case 'human_agent':
-      return new Command({ goto: 'escalateToHuman' });
-
-    case 'unknown':
-    default:
-      return new Command({ goto: 'handleUnknown' });
-  }
+      // 2. Return the updated graph state
+      return new Command({
+        update: {
+          toolResult: {
+            success: true,
+            data: {
+              handoffStatus: 'escalated',
+              escalationReason: EscalationReason.CUSTOMER_REQUESTED_HUMAN,
+              supportTicketId: crypto.randomUUID(),
+              assignedAgent: 'Mr Resolver',
+              response: `Your request has been escalated to our human support team. Your support reference is ${crypto.randomUUID()}. A representative will follow up with you.`,
+            },
+            error: null,
+          },
+        },
+        // goto: '',
+      });
+    } catch (error) {
+      return new Command({
+        update: {
+          toolResult: {
+            success: false,
+            data: {
+              handoffStatus: 'failed',
+              response:
+                'We could not complete your request for human support right now. Please try again shortly.',
+            },
+            error: 'error occur',
+          },
+        },
+      });
+    }
+  };
 };
-
-// escalateToHuman
-//       ↓
-// create support ticket
-//       ↓
-// assign/queue ticket
-//       ↓
-// notify support team
-//       ↓
-// generateSupportResponse
-//       ↓
-// END

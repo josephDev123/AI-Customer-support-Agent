@@ -48,6 +48,12 @@ export type SupportIntent = z.infer<typeof SupportIntentSchema>;
 export type SupportNextStep = z.infer<typeof SupportNextStepSchema>;
 // export type SupportCustomerInfo = z.infer<typeof CustomerInfo>;
 
+export const ConfigSchema = z.object({
+  email: z.email(),
+});
+
+export type IConfigSchema = z.infer<typeof ConfigSchema>;
+
 // josephuzuegbu55@gmail.com
 // The product i bought is not working
 

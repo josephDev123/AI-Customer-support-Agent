@@ -1,21 +1,5 @@
-import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { Command, interrupt, type GraphNode } from '@langchain/langgraph';
-import { z } from 'zod';
-import { randomUUID } from 'node:crypto';
+import { Command, type GraphNode } from '@langchain/langgraph';
 import { type SupportStateType } from '../state';
-import { getSupportModel } from '../model';
-import { Runtime } from 'langchain';
-
-const LlmQuestionSchema = z.object({
-  customerQuestion: z.string(),
-  email: z.string(),
-});
-
-const ConfigSchema = z.object({
-  email: z.email(),
-});
-
-type IConfigSchema = z.infer<typeof ConfigSchema>;
 
 export const ReadCustomerQuestionNode: GraphNode<
   SupportStateType,
