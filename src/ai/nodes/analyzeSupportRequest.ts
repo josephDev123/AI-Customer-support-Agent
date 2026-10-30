@@ -19,25 +19,6 @@ export const analyzeSupportRequest: GraphNode<typeof SupportState> = async (
   state,
 ) => {
   const model = await getSupportModel();
-  // const classifier = model.withStructuredOutput(IntentDecisionSchema);
-
-  // const decision = await classifier.invoke([
-  //   new SystemMessage(
-  //     `
-  //     You are a customer support intent classifier.
-
-  //     Classify the customer support request and  return the intent enum, confidence,
-  //     whether clarification is needed and add missing information needed to proceed.
-
-  //     Return only structured output.
-
-  //     Do not return any other fields.
-
-  //     The response must be valid JSON matching the required schema.
-  //     `,
-  //   ),
-  //   new HumanMessage(state.customerQuestion),
-  // ]);
 
   const classifier = model.withStructuredOutput(IntentDecisionSchema);
 

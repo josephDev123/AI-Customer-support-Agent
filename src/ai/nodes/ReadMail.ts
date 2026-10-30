@@ -11,15 +11,24 @@ const LlmQuestionSchema = z.object({
   email: z.string(),
 });
 
-export const ReadCustomerQuestionNode: GraphNode<SupportStateType> = async (
-  state,
-  runtime: Runtime,
-) => {
-  console.log('Current state:', {
-    question: state.customerQuestion,
-    customerMail: state.customerMail,
-  });
+const ConfigSchema = z.object({
+  email: z.email(),
+});
+
+type IConfigSchema = z.infer<typeof ConfigSchema>;
+
+export const ReadCustomerQuestionNode: GraphNode<
+  SupportStateType,
+  any
+> = async (state, runtime) => {
   const namespace = ['mail'];
+  const config = runtime?.configurable;
+  const configEmail = config?.email;
+  // console.log('context', config);
+
+  if (!configEmail) {
+    throw new Error('Customer mail is required');
+  }
 
   // const store = runtime.store;
   // const storeMail = await store?.search(namespace);
@@ -28,72 +37,60 @@ export const ReadCustomerQuestionNode: GraphNode<SupportStateType> = async (
   //   : null;
   // console.log('store', storeExtractedMail);
 
-  // if (storeExtractedMail && state.customerQuestion) {
-  //   return new Command({
-  //     update: {
-  //       customerQuestion: state.customerQuestion,
-  //       customerMail: storeExtractedMail,
-  //     },
-
-  //     goto: 'analyzeSupportRequest',
-  //   });
-  // }
-
-  const model = await getSupportModel();
-
-  const llmWithStructuredOutput = model.withStructuredOutput(LlmQuestionSchema);
-
-  const result = await llmWithStructuredOutput.invoke([
-    new SystemMessage(`
-    You are a customer question content extractor.
-
-Extract these fields from the customer's message:
-
-- customerQuestion
-- email
-
-Rules:
-
-1. customerQuestion must contain the customer's actual support question.
-2. If the customer provides an email address, extract it exactly.
-3. Do not invent an email address.
-4. Return only the structured output.
-  `),
-
-    new HumanMessage(state.customerQuestion),
-  ]);
-
-  console.log('what was return form reading customer question', result);
-
-  const emailSchema = z.email();
-
-  // let customerMail = result.email;
-  let customerMail = state.customerMail || result.email;
-
-  console.log('mail:', customerMail);
-
-  if (!customerMail) {
-    const providedEmail = interrupt({
-      reason: 'Customer email is required',
-    });
-    console.log('interupt :', providedEmail);
-
-    customerMail = emailSchema.parse(providedEmail);
-    // const id = randomUUID();
-    // await store?.put(namespace, id, { mail: providedEmail });
-  }
-
-  console.log('NODE RETURN:', {
-    customerQuestion: result.customerQuestion,
-    customerMail,
-  });
-
   return new Command({
     update: {
-      customerQuestion: result.customerQuestion,
-      customerMail,
+      customerQuestion: state.customerQuestion,
     },
 
     goto: 'analyzeSupportRequest',
   });
+
+  //   const model = await getSupportModel();
+
+  //   const llmWithStructuredOutput = model.withStructuredOutput(LlmQuestionSchema);
+
+  //   const result = await llmWithStructuredOutput.invoke([
+  //     new SystemMessage(`
+  //     You are a customer question content extractor.
+
+  // Extract these fields from the customer's message:
+
+  // - customerQuestion
+  // - email
+
+  // Rules:
+
+  // 1. customerQuestion must contain the customer's actual support question.
+  // 2. If the customer provides an email address, extract it exactly.
+  // 3. Do not invent an email address.
+  // 4. Return only the structured output.
+  //   `),
+
+  //     new HumanMessage(state.customerQuestion),
+  //   ]);
+
+  // const emailSchema = z.email();
+
+  // let customerMail = result.email;
+  // let customerMail = state.customerMail || result.email;
+
+  // if (!customerMail) {
+  //   const providedEmail = interrupt({
+  //     reason: 'Customer email is required',
+  //   });
+  //   console.log('interupt :', providedEmail);
+
+  // customerMail = emailSchema.parse(providedEmail);
+  // const id = randomUUID();
+  // await store?.put(namespace, id, { mail: providedEmail });
+  // }
+
+  // return new Command({
+  //   update: {
+  //     // customerQuestion: result.customerQuestion,
+  //     // customerMail,
+  //   },
+
+  //   goto: 'analyzeSupportRequest',
+  // });
 };
