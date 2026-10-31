@@ -1,12 +1,12 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { Command, type GraphNode } from '@langchain/langgraph';
 import { z } from 'zod';
-import { getSupportModel } from '../model';
+import { getSupportModel } from '../model.js';
 import {
   SupportIntentSchema,
   SupportState,
   type SupportStateType,
-} from '../state';
+} from '../state.js';
 
 const IntentDecisionSchema = z.object({
   intent: SupportIntentSchema,

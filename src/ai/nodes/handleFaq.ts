@@ -1,5 +1,5 @@
 import { Command, GraphNode } from '@langchain/langgraph';
-import { SupportStateType } from '../state';
+import { SupportStateType } from '../state.js';
 import { Pinecone } from '@pinecone-database/pinecone';
 
 export const handleFaq: GraphNode<SupportStateType> = async (

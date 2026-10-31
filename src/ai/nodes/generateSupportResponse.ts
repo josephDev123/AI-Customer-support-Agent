@@ -1,8 +1,8 @@
 import { type GraphNode } from '@langchain/langgraph';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 
-import { type SupportStateType } from '../state';
-import { getSupportModel } from '../model';
+import { type SupportStateType } from '../state.js';
+import { getSupportModel } from '../model.js';
 
 const FALLBACK_RESPONSE =
   'I am sorry, but I could not generate a response right now. Please try again.';

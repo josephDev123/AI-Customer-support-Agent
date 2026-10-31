@@ -1,6 +1,6 @@
 import { Command, GraphNode } from '@langchain/langgraph';
-import { SupportStateType } from '../state';
-import { getSupportModel } from '../model';
+import { SupportStateType } from '../state.js';
+import { getSupportModel } from '../model.js';
 import { HumanMessage, SystemMessage } from 'langchain';
 
 export const handleOrderStatus: GraphNode<SupportStateType> = async (

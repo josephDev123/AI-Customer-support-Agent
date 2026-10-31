@@ -7,22 +7,22 @@ import {
   NodeError,
   Command,
 } from '@langchain/langgraph';
-import { analyzeSupportRequest } from './nodes/analyzeSupportRequest';
-import { SupportState } from './state';
-import { ReadCustomerQuestionNode } from './nodes/ReadMail';
-import { requestClarification } from './nodes/requestClarification';
-import { routeSupportRequest } from './nodes/routeSupportRequest';
-import { generateSupportResponse } from './nodes/generateSupportResponse';
-import { handleFaq } from './nodes/handleFaq';
-import { handleOrderStatus } from './nodes/handleOrderStatus';
-import { handleRefund } from './nodes/handleRefund';
-import { handlePayment } from './nodes/handlePayment';
-import { handleAccount } from './nodes/handleAccount';
-import { handleComplaint } from './nodes/handleComplaint';
-import { handleBugReport } from './nodes/handleBugReport';
-import { handleFeatureRequest } from './nodes/handleFeatureRequest';
-import { handleUnknown } from './nodes/handleUnknown';
-import { escalateToHuman } from './nodes/escalateToHuman';
+import { analyzeSupportRequest } from './nodes/analyzeSupportRequest.js';
+import { SupportState } from './state.js';
+import { ReadCustomerQuestionNode } from './nodes/ReadMail.js';
+import { requestClarification } from './nodes/requestClarification.js';
+import { routeSupportRequest } from './nodes/routeSupportRequest.js';
+import { generateSupportResponse } from './nodes/generateSupportResponse.js';
+import { handleFaq } from './nodes/handleFaq.js';
+import { handleOrderStatus } from './nodes/handleOrderStatus.js';
+import { handleRefund } from './nodes/handleRefund.js';
+import { handlePayment } from './nodes/handlePayment.js';
+import { handleAccount } from './nodes/handleAccount.js';
+import { handleComplaint } from './nodes/handleComplaint.js';
+import { handleBugReport } from './nodes/handleBugReport.js';
+import { handleFeatureRequest } from './nodes/handleFeatureRequest.js';
+import { handleUnknown } from './nodes/handleUnknown.js';
+import { escalateToHuman } from './nodes/escalateToHuman.js';
 
 const checkpointer = new MemorySaver();
 const store = new InMemoryStore();

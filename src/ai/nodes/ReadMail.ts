@@ -1,5 +1,5 @@
 import { Command, type GraphNode } from '@langchain/langgraph';
-import { type SupportStateType } from '../state';
+import { type SupportStateType } from '../state.js';
 
 export const ReadCustomerQuestionNode: GraphNode<
   SupportStateType,

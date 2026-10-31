@@ -1,5 +1,5 @@
 import { Command, type GraphNode } from '@langchain/langgraph';
-import { SupportState } from '../state';
+import { SupportState } from '../state.js';
 
 export const routeSupportRequest: GraphNode<typeof SupportState> = async (
   state,
