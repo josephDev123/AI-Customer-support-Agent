@@ -6,7 +6,7 @@ import {
   CUSTOMER_SUPPORT_REPOSITORY,
   type CustomerSupportRepository,
 } from '../infrastructure/customer-support.repository';
-import { supportGraph } from '../../ai/graph';
+import { supportGraph } from '../../../ai/graph';
 
 export type SupportStreamInput = {
   customerQuestion: string;
