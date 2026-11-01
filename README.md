@@ -1,72 +1,45 @@
-# Customer Support AI Agent Orchestrator
+# Customer Support AI Agent
 
-A NestJS API that orchestrates an AI-powered customer-support workflow with LangGraph. The orchestrator reads a customer question, analyzes its intent, requests clarification when needed, routes the request to a specialized support handler, and generates a final response or human-escalation recommendation.
+A NestJS API that orchestrates an AI-powered customer-support workflow with LangGraph. The agent analyzes customer questions, routes support requests, generates responses, and creates persistent human-escalation tickets when needed.
 
-## What it does
+## Features
 
-The active support graph in `src/ai/graph.ts` coordinates these stages:
-
-1. Read and extract the customer question.
-2. Request missing information, such as an email address, when required.
-3. Analyze the request and classify its intent.
-4. Route the request to a specialized handler.
-5. Generate a customer-facing support response.
-
-Supported intents include:
-
-- FAQ
-- Order status
-- Refunds
-- Payments
-- Account issues
-- Complaints
-- Bug reports
-- Feature requests
-- Human-agent escalation
-- Unknown or unsupported requests
-
-The graph uses LangGraph checkpointing and an in-memory store for the current development workflow.
+- FAQ, order status, refund, payment, account, complaint, bug-report, and feature-request routing.
+- Human-agent escalation through a persisted PostgreSQL ticket.
+- Prisma 7 with the PostgreSQL driver adapter.
+- Zod validation for request and environment data.
+- LangGraph checkpointing and in-memory development state.
 
 ## Architecture
 
 ```text
-HTTP request
-    |
-    v
-NestJS CustomerSupportController
-    |
-    v
-CustomerSupportService
-    |
-    v
+Customer question
+       |
+       v
 LangGraph supportGraph
-    |
-    +--> Read customer question
-    +--> Analyze intent and confidence
-    +--> Clarify missing information when needed
-    +--> Route to a support handler
-    +--> Generate final response
-    |
-    v
-In-memory run repository
+       |
+       +--> Detect human escalation
+       |        |
+       |        v
+       |   POST /human-escalation-tickets
+       |        |
+       |        v
+       |   NestJS controller
+       |        |
+       |        v
+       |   Service -> Repository -> Prisma -> PostgreSQL
+       |
+       +--> Other support handler -> Customer response
 ```
-
-## Technology
-
-- [NestJS](https://nestjs.com/) — HTTP application and dependency injection
-- [LangGraph.js](https://langchain-ai.github.io/langgraphjs/) — stateful agent orchestration
-- [LangChain](https://js.langchain.com/) — chat-model integration and messages
-- [Zod](https://zod.dev/) — request, state, model-output, and environment validation
-- Hugging Face OpenAI-compatible router — current model provider
-- Pinecone — configured for retrieval-oriented support workflows
 
 ## Prerequisites
 
 - Node.js 24
 - npm
-- A Hugging Face API key
-- LangSmith credentials for tracing/configuration
-- Pinecone credentials for the configured retrieval integration
+- PostgreSQL
+- Hugging Face API key
+- LangSmith credentials
+- Pinecone credentials
 
 ## Installation
 
@@ -74,7 +47,7 @@ In-memory run repository
 npm install
 ```
 
-Create a `.env` file in the project root:
+Create a `.env` file:
 
 ```env
 PORT=6000
@@ -82,89 +55,107 @@ HF_API_KEY=your_huggingface_api_key
 LANGSMITH_API_KEY=your_langsmith_api_key
 PINECONE_API_KEY=your_pinecone_api_key
 PINECONE_HOST=your_pinecone_host
+DATABASE_URL=postgresql://user:password@localhost:5432/customer_support
+HUMAN_ESCALATION_SERVICE_URL=http://localhost:6000
 ```
 
-All five variables are validated at startup. `PORT` is exposed as the HTTP port and defaults to `6000` in the application bootstrap when not otherwise provided.
+`DATABASE_URL` is required. `HUMAN_ESCALATION_SERVICE_URL` is optional and defaults to `http://localhost:8000` inside the LangGraph escalation node. Set it to the NestJS API base URL when the agent and API run in separate processes.
+
+Apply migrations and generate the Prisma client:
+
+```bash
+prisma migrate deploy
+prisma generate
+```
 
 ## Run the API
 
 ```bash
-# Start the API
 npm run start
-
-# Start in watch mode
 npm run start:dev
-
-# Build the application
 npm run build
-
-# Run the compiled application
 npm run start:prod
 ```
 
-By default, the API is available at `http://localhost:6000`.
+The API listens on `http://localhost:6000` when `PORT=6000` is configured.
 
 ## API
 
-### `POST /agent/question`
+### `POST /human-escalation-tickets`
 
-Submit a customer-support question:
+Creates a human-escalation ticket. This endpoint is called by the LangGraph agent and can also be used by another trusted integration.
 
-```bash
-curl -X POST http://localhost:6000/agent/question \
-  -H "Content-Type: application/json" \
-  -d '{"question":"Where is my order?"}'
-```
-
-Request body:
+Request:
 
 ```json
 {
-  "question": "Where is my order?",
-  "threadId": "optional-existing-thread-id"
+  "customerEmail": "customer@example.com",
+  "customerQuestion": "I want to speak to a human about my order.",
+  "intent": "human_agent",
+  "priority": "high"
 }
 ```
 
-`question` is required and must contain non-whitespace text. `threadId` is optional; if omitted, the service generates a UUID.
+Fields:
 
-A successful response includes a `runId` and the current graph result, which can include fields such as:
+- `customerEmail` — required valid email address.
+- `customerQuestion` — required non-empty question.
+- `intent` — required support intent.
+- `priority` — optional: `low`, `medium`, or `high`; defaults to `medium`.
+
+Response:
 
 ```json
 {
-  "runId": "run-id",
-  "intent": "order_status",
-  "confidence": 0.94,
-  "needsClarification": false,
-  "missingInformation": [],
-  "clarificationPrompt": null,
-  "finalResult": "..."
+  "id": "c2c5f2b0-9a3c-4d8f-8a7d-2b5c0f8d2d31",
+  "customerEmail": "customer@example.com",
+  "customerQuestion": "I want to speak to a human about my order.",
+  "intent": "human_agent",
+  "priority": "high",
+  "status": "OPEN",
+  "assignedTo": null,
+  "assignedAt": null,
+  "resolvedAt": null,
+  "resolution": null,
+  "lastHumanResponseAt": null,
+  "createdAt": "2026-11-01T06:00:00.000Z",
+  "updatedAt": "2026-11-01T06:00:00.000Z"
 }
 ```
 
-Invalid requests return `400 Bad Request`.
+Ticket statuses are `OPEN`, `ASSIGNED`, `IN_PROGRESS`, `WAITING_FOR_CUSTOMER`, `RESOLVED`, and `CLOSED`.
 
-## Current development limitations
+The database prevents duplicate tickets for the same customer email and question.
 
-- Run records and LangGraph checkpoints are stored in memory and are lost when the process restarts.
-- The graph can pause with an interrupt when an email address or clarification is required. Resume handling is not yet exposed through the HTTP API.
-- Environment validation requires Pinecone variables even though the current graph's retrieval integration is still being completed.
+Common errors:
 
-## Project structure
+- `400 Bad Request` — invalid request or database values.
+- `409 Conflict` — an equivalent ticket already exists.
+- `503 Service Unavailable` — the database is unavailable or timed out.
+- `500 Internal Server Error` — an unexpected persistence failure.
+
+## Project Structure
 
 ```text
 src/
 ├── ai/                  LangGraph state, graph, model, and support nodes
-├── customer-support/   Active HTTP controller, service, DTO, and run repository
-├── agent/              Earlier agent workflow and supporting abstractions
+├── features/
+│   └── customer-support/ Controller, service, DTO, and repository
+├── generated/prisma/    Generated Prisma client
+├── prisma/              Prisma service and module
 ├── config/              Application configuration
 ├── shared/              Shared validation schemas
 └── main.ts              Application bootstrap
 
-test/                    End-to-end tests
-langgraph.json           LangGraph CLI graph configuration
+prisma/
+├── schema.prisma        Generator and datasource configuration
+├── models/              One Prisma model per file
+│   ├── user.prisma
+│   └── human-escalation-ticket.prisma
+└── migrations/          PostgreSQL migrations
 ```
 
-## Tests and quality checks
+## Tests and Quality Checks
 
 ```bash
 npm run test
@@ -175,12 +166,16 @@ npm run lint
 npm run format
 ```
 
-## LangGraph development
+## LangGraph Development
 
-The graph exposed to LangGraph tooling is named `agent` and points to `src/ai/graph.ts:supportGraph`:
+The graph exposed to LangGraph tooling is `agent` and points to `src/ai/graph.ts:supportGraph`:
 
 ```bash
 npx @langchain/langgraph-cli dev
 ```
 
-See `langgraph.json` and the [LangGraph.js documentation](https://langchain-ai.github.io/langgraphjs/) for local graph development and deployment configuration.
+## Current Limitations
+
+- Run records and LangGraph checkpoints are stored in memory and are lost when the process restarts.
+- Resume handling for graph interruptions is not exposed through the HTTP API.
+- The agent and NestJS API must be able to reach each other through `HUMAN_ESCALATION_SERVICE_URL`.

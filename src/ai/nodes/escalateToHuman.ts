@@ -3,43 +3,47 @@ import { SupportState } from '../state.js';
 
 interface CreateEscalationInput {
   customerEmail: string;
+  customerQuestion: string;
   intent: string;
-  reason: EscalationReason;
+  priority?: 'low' | 'medium' | 'high';
 }
 
-export enum EscalationReason {
-  CUSTOMER_REQUESTED_HUMAN = 'CUSTOMER_REQUESTED_HUMAN',
-  COMPLEX_ISSUE = 'COMPLEX_ISSUE',
-  LOW_CONFIDENCE = 'LOW_CONFIDENCE',
-  UNRESOLVED_ISSUE = 'UNRESOLVED_ISSUE',
-  CUSTOMER_COMPLAINT = 'CUSTOMER_COMPLAINT',
-}
-interface CreateEscalationResult {
-  ticketId: string;
-  assignedAgentName: string;
-}
+const escalationServiceUrl = () =>
+  process.env.HUMAN_ESCALATION_SERVICE_URL ?? 'http://localhost:8000';
 
 export const escalateToHuman = (
   // supportService: SupportService,
 ): GraphNode<typeof SupportState, any> => {
   return async (state, runtime) => {
     try {
-      // 1. Create the escalation ticket
-      // const escalation = await supportService.createEscalation({
-      //   customerEmail: runtime.configurable?.email,
-      //   customerQuestion: state.customerQuestion,
-      //   intent: state.intent,
-      //   reason: EscalationReason.CUSTOMER_REQUESTED_HUMAN,
-      // });
-
-      // 1. Create the escalation ticket mock result
-
-      const escalation = {
+      const escalation: CreateEscalationInput = {
         customerEmail: runtime.configurable?.email,
         customerQuestion: state.customerQuestion,
         intent: state.intent,
-        reason: EscalationReason.CUSTOMER_REQUESTED_HUMAN,
+        priority: 'high',
       };
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      let ticket: unknown;
+      try {
+        const response = await fetch(
+          `${escalationServiceUrl().replace(/\/$/, '')}/human-escalation-tickets`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(escalation),
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(`Escalation service returned ${response.status}`);
+        }
+        ticket = await response.json();
+      } finally {
+        clearTimeout(timeout);
+      }
 
       // 2. Return the updated graph state
       return new Command({
@@ -48,15 +52,13 @@ export const escalateToHuman = (
             success: true,
             data: {
               handoffStatus: 'escalated',
-              escalationReason: EscalationReason.CUSTOMER_REQUESTED_HUMAN,
-              supportTicketId: crypto.randomUUID(),
-              assignedAgent: 'Mr Resolver',
-              response: `Your request has been escalated to our human support team. Your support reference is ${crypto.randomUUID()}. A representative will follow up with you.`,
+              ticket,
+              response:
+                'Your request has been escalated to our human support team. A representative will follow up with you.',
             },
             error: null,
           },
         },
-        // goto: '',
       });
     } catch (error) {
       return new Command({
@@ -68,7 +70,10 @@ export const escalateToHuman = (
               response:
                 'We could not complete your request for human support right now. Please try again shortly.',
             },
-            error: 'error occur',
+            error:
+              error instanceof Error
+                ? error.message
+                : 'An unexpected error occurred',
           },
         },
       });

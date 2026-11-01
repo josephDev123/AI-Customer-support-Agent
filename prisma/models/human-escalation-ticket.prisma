@@ -1,0 +1,29 @@
+enum EscalationStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  WAITING_FOR_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+model HumanEscalationTicket {
+  id                  String           @id @default(uuid()) @db.Uuid
+  customerEmail       String
+  customerQuestion    String
+  intent              String
+  priority            String           @default("medium")
+  status              EscalationStatus @default(OPEN)
+  assignedTo          String?
+  assignedAt          DateTime?
+  resolvedAt          DateTime?
+  resolution          String?
+  lastHumanResponseAt DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@unique([customerEmail, customerQuestion])
+
+  @@index([status])
+  @@index([customerEmail])
+}

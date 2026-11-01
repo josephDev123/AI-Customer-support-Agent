@@ -1,6 +1,6 @@
-import { Body, Controller, Param, Post, Req, Res } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import { CustomerSupportService } from '../service/customer-support.service.js';
+import { CreateHumanEscalationTicketSchema } from '../dto/customer-question.dto.js';
 
 @Controller()
 export class CustomerSupportController {
@@ -8,14 +8,13 @@ export class CustomerSupportController {
     private readonly customerSupportService: CustomerSupportService,
   ) {}
 
-  @Post('threads/:threadId/runs/stream')
-  async streamRun(
-    @Param('threadId') threadId: string,
-    @Body() body: any,
-    @Req() request: Request,
-    @Res() response: Response,
-  ) {}
+  @Post('human-escalation-tickets')
+  async createHumanEscalationTicket(@Body() body: unknown) {
+    const parsed = CreateHumanEscalationTicketSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException(parsed.error.issues);
+    }
 
-  @Post('agent/question')
-  async askQuestion(@Body() body: any) {}
+    return this.customerSupportService.createHumanEscalationTicket(parsed.data);
+  }
 }

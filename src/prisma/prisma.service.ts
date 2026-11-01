@@ -1,5 +1,4 @@
 import {
-  Global,
   Injectable,
   Logger,
   OnModuleDestroy,
@@ -9,7 +8,6 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client.js';
 
-@Global()
 @Injectable()
 export class PrismaService
   extends PrismaClient
