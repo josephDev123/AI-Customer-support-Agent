@@ -12,7 +12,8 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main",
+    "start:langgraph": "npx @langchain/langgraph-cli dev --host 0.0.0.0 --port 2024 --no-browser --no-reload",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -24,6 +25,7 @@
     "@langchain/core": "^1.2.5",
     "@langchain/google": "^0.2.10",
     "@langchain/langgraph": "^1.4.9",
+    "@langchain/langgraph-sdk": "~1.9.28",
     "@langchain/openai": "^1.5.11",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
@@ -37,6 +39,7 @@
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "uuid": "^14.0.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -1,0 +1,109 @@
+services:
+  postgres:
+    container_name: ai-agent-db
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-customer_support}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: ${POSTGRES_DB:-customer_support}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - backend
+
+  migrate:
+    container_name: ai-agent-migration
+    image: ai-customer-support-agent:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: 'no'
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-customer_support}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-customer_support}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ['npx', 'prisma', 'migrate', 'deploy']
+    networks:
+      - backend
+
+  api:
+    container_name: ai-agent-api
+    image: ai-customer-support-agent:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-customer_support}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-customer_support}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:?LANGSMITH_API_KEY must be set}
+      PINECONE_API_KEY: ${PINECONE_API_KEY:?PINECONE_API_KEY must be set}
+      PINECONE_HOST: ${PINECONE_HOST:?PINECONE_HOST must be set}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:?GOOGLE_API_KEY must be set}
+      LANGGRAPH_API_URL: http://langgraph:2024
+    ports:
+      - '127.0.0.1:${API_HOST_PORT:-5000}:5000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:5000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  langgraph:
+    container_name: ai-agent-langgraph
+    image: ai-customer-support-agent:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:?LANGSMITH_API_KEY must be set}
+      PINECONE_API_KEY: ${PINECONE_API_KEY:?PINECONE_API_KEY must be set}
+      PINECONE_HOST: ${PINECONE_HOST:?PINECONE_HOST must be set}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:?GOOGLE_API_KEY must be set}
+      HUMAN_ESCALATION_SERVICE_URL: http://api:5000
+    command: ['npm', 'run', 'start:langgraph']
+    ports:
+      - '127.0.0.1:${LANGGRAPH_HOST_PORT:-2024}:2024'
+    networks:
+      - backend
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:2024/ok').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  postgres_data:

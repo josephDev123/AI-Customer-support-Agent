@@ -4,6 +4,7 @@ import { CustomerSupportModule } from './features/customer-support/customer-supp
 import { Env_validation } from './shared/schemas/env.validation.js';
 import { appConfig } from './config/appConfig.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { LangGraphServerModule } from './features/langgraph-server/langgraph-server.module.js';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
       load: [appConfig],
     }),
     CustomerSupportModule,
+    LangGraphServerModule,
     PrismaModule,
   ],
 })

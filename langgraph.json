@@ -1,7 +1,23 @@
 {
   "node_version": "24",
+  "node_loader": "ts-node/esm",
   "graphs": {
     "agent": "./src/ai/graph.ts:supportGraph"
   },
-  "env": ".env"
+  "env": ".env",
+  "http": {
+    "cors": {
+      "allow_origins": ["https://josephdev.com.ng"],
+      "allow_methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      "allow_headers": [
+        "Authorization",
+        "Content-Type",
+        "X-Api-Key",
+        "Last-Event-ID"
+      ],
+      "allow_credentials": false,
+      "expose_headers": ["Content-Location", "X-Pagination-Total"],
+      "max_age": 600
+    }
+  }
 }
