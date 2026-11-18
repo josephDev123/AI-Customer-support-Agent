@@ -41,6 +41,6 @@ RUN mkdir -p /app/.langgraph_api \
     && chown node:node /app/.langgraph_api /app/.gitignore
 
 USER node
-EXPOSE 5000 2024
+EXPOSE 8000 2024
 
 CMD ["node", "dist/src/main.js"]

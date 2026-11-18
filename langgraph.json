@@ -7,7 +7,7 @@
   "env": ".env",
   "http": {
     "cors": {
-      "allow_origins": ["https://josephdev.com.ng"],
+      "allow_origins": ["https://josephdev.com.ng", "http://localhost:5173"],
       "allow_methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       "allow_headers": [
         "Authorization",
