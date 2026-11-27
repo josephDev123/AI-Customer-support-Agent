@@ -3,7 +3,7 @@ name: Build, Publish & Deploy
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 env:
@@ -58,7 +58,7 @@ jobs:
     name: Deploy to DigitalOcean Droplet
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
 
     steps:
       - name: Checkout repository (for docker-compose.yml)
