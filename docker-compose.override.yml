@@ -1,0 +1,19 @@
+# Development overrides: automatically merged with docker-compose.yml on local machine
+services:
+  migrate:
+    image: ai-customer-support-agent:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+  api:
+    image: ai-customer-support-agent:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+  langgraph:
+    image: ai-customer-support-agent:local
+    build:
+      context: .
+      dockerfile: Dockerfile

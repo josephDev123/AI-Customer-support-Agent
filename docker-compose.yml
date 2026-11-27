@@ -19,10 +19,7 @@ services:
 
   migrate:
     container_name: ai-agent-migration
-    image: ai-customer-support-agent:local
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${APP_IMAGE:-ghcr.io/josephdev123/ai-customer-support-agent:latest}
     restart: 'no'
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-customer_support}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-customer_support}
@@ -35,10 +32,7 @@ services:
 
   api:
     container_name: ai-agent-api
-    image: ai-customer-support-agent:local
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${APP_IMAGE:-ghcr.io/josephdev123/ai-customer-support-agent:latest}
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -71,10 +65,7 @@ services:
 
   langgraph:
     container_name: ai-agent-langgraph
-    image: ai-customer-support-agent:local
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${APP_IMAGE:-ghcr.io/josephdev123/ai-customer-support-agent:latest}
     restart: unless-stopped
     environment:
       NODE_ENV: production
